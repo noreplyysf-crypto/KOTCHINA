@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كوتشينة أونلاين</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0d18; --felt:#1b4332; --felt2:#0d2b1f;
+  --gold:#f5c842; --gold2:#c8940a; --red:#e03030;
+  --green:#52b788; --card-bg:#fffef5; --card-border:#c8a96e;
+  --text:#f0e6c8; --dim:#7a6a4a; --panel:#16162a; --panel2:#1e1e35;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,#1a1040 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,#0a2010 0%,transparent 50%);font-family:'Tajawal',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-x:hidden;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes glow{0%,100%{box-shadow:0 0 10px rgba(245,200,66,.3)}50%{box-shadow:0 0 28px rgba(245,200,66,.65)}}
+@keyframes floatUp{from{transform:translateX(-50%) translateY(0);opacity:1}to{transform:translateX(-50%) translateY(-70px);opacity:0}}
+@keyframes cardIn{from{transform:scale(.5) rotate(-8deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+
+/* LOBBY */
+#lobby{display:flex;flex-direction:column;align-items:center;gap:20px;padding:40px 20px;animation:fadeIn .4s ease;}
+#lobby h1{font-size:3.5rem;font-weight:900;background:linear-gradient(135deg,var(--gold) 0%,#fff8dc 50%,var(--gold2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(245,200,66,.5));letter-spacing:3px;}
+.subtitle{color:var(--dim);font-size:1rem;}
+.cards-deco{display:flex;gap:6px;margin-bottom:4px;font-size:2rem;}
+.glass-panel{background:rgba(22,22,42,.85);border:1px solid rgba(245,200,66,.18);border-radius:20px;padding:28px;width:320px;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.input-group{display:flex;flex-direction:column;gap:8px;}
+.input-group label{color:var(--gold);font-weight:700;font-size:.85rem;letter-spacing:1px;}
+.input-group input{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:1rem;outline:none;transition:border-color .2s,background .2s;text-align:right;}
+.input-group input:focus{border-color:var(--gold);background:rgba(245,200,66,.05);}
+.divider{display:flex;align-items:center;gap:10px;margin:4px 0;color:var(--dim);font-size:.85rem;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.1);}
+.btn{padding:13px 28px;border-radius:12px;border:none;font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;width:100%;letter-spacing:.5px;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1000;box-shadow:0 4px 15px rgba(245,200,66,.25);}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(245,200,66,.4);}
+.btn-outline{background:transparent;border:1.5px solid rgba(245,200,66,.4);color:var(--gold);}
+.btn-outline:hover{background:rgba(245,200,66,.08);border-color:var(--gold);}
+.room-code-display{text-align:center;padding:16px;background:rgba(245,200,66,.07);border:1.5px dashed rgba(245,200,66,.4);border-radius:14px;}
+.room-code-display .code{font-size:2.8rem;font-weight:900;color:var(--gold);letter-spacing:10px;font-family:monospace;animation:glow 2s infinite;}
+.room-code-display .hint{color:var(--dim);font-size:.85rem;margin-top:4px;}
+.waiting-indicator{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:.9rem;justify-content:center;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1.4s infinite;}
+.dot:nth-child(2){animation-delay:.2s;}.dot:nth-child(3){animation-delay:.4s;}
+
+/* GAME */
+#game{display:none;flex-direction:column;align-items:center;width:100%;max-width:1100px;padding:12px 12px 20px;gap:10px;min-height:100vh;animation:fadeIn .3s ease;}
+.game-header{display:flex;align-items:center;justify-content:space-between;width:100%;}
+.game-title{font-size:1.4rem;font-weight:900;color:var(--gold);}
+.btn-sm{padding:8px 16px;font-size:.85rem;width:auto;border-radius:10px;}
+
+/* Two-column layout */
+.game-body{display:flex;gap:14px;width:100%;align-items:flex-start;}
+.game-main{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;}
+
+/* CHAT SIDEBAR */
+.chat-sidebar{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:0;background:var(--panel);border:1.5px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;position:sticky;top:12px;max-height:calc(100vh - 24px);}
+.chat-sidebar-title{padding:10px 14px;font-size:.8rem;font-weight:700;color:var(--gold);letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2);}
+.chat-messages{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px;min-height:200px;max-height:340px;}
+.chat-messages::-webkit-scrollbar{width:3px;}.chat-messages::-webkit-scrollbar-thumb{background:rgba(245,200,66,.25);border-radius:2px;}
+.chat-msg{font-size:.82rem;line-height:1.4;word-break:break-word;}
+.chat-msg .chat-author{font-weight:700;margin-left:4px;display:block;font-size:.72rem;}
+.chat-msg.mine .chat-author{color:var(--gold);}
+.chat-msg.opp .chat-author{color:#e05050;}
+.chat-msg.mine{background:rgba(245,200,66,.07);border-radius:8px;padding:5px 8px;}
+.chat-msg.opp{background:rgba(224,80,80,.07);border-radius:8px;padding:5px 8px;}
+.chat-msg.sys{color:var(--dim);font-style:italic;text-align:center;font-size:.75rem;}
+
+/* Quick emoji */
+.chat-emojis{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 10px;border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.1);}
+.chat-emojis button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:1.2rem;cursor:pointer;padding:5px 0;transition:all .15s;line-height:1;}
+.chat-emojis button:hover{background:rgba(245,200,66,.15);border-color:rgba(245,200,66,.4);transform:scale(1.15);}
+.chat-emojis button:active{transform:scale(.95);}
+
+.chat-input-row{display:flex;gap:6px;padding:8px 10px;border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.15);}
+.chat-input-row input{flex:1;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 10px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.85rem;outline:none;min-width:0;}
+.chat-input-row input:focus{border-color:var(--gold);}
+.chat-send-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:8px;color:#1a1000;font-size:1rem;font-weight:900;cursor:pointer;padding:7px 11px;transition:all .15s;flex-shrink:0;}
+.chat-send-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,200,66,.3);}
+
+.scores-row{display:flex;gap:10px;width:100%;justify-content:center;}
+.score-card{flex:1;max-width:200px;background:var(--panel);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;transition:border-color .3s,box-shadow .3s;}
+.score-card.is-turn{border-color:var(--gold);box-shadow:0 0 15px rgba(245,200,66,.2);}
+.score-card .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:#1a1000;flex-shrink:0;}
+.score-card .info{flex:1;min-width:0;}
+.score-card .sname{font-size:.8rem;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.score-card .spts{font-size:1.3rem;font-weight:900;color:var(--gold);line-height:1;}
+.score-card .scap{font-size:.72rem;color:var(--green);}
+
+.player-area{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.player-label{font-size:.8rem;color:var(--dim);font-weight:700;letter-spacing:1px;}
+.player-label.active{color:var(--gold);}
+.cards-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;min-height:40px;}
+
+/* CARDS */
+.card{width:70px;height:98px;background:var(--card-bg);border:2px solid var(--card-border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s,box-shadow .18s;position:relative;overflow:hidden;box-shadow:2px 3px 10px rgba(0,0,0,.5);user-select:none;animation:cardIn .25s ease;}
+.card:hover{transform:translateY(-7px);box-shadow:2px 10px 22px rgba(0,0,0,.65);}
+.card.selected{transform:translateY(-13px);box-shadow:0 0 0 3px var(--gold),2px 14px 26px rgba(0,0,0,.7);}
+.card.capturable{outline:2.5px dashed var(--gold);cursor:pointer;}
+.card.capturable:hover{transform:translateY(-8px) scale(1.04);box-shadow:0 0 18px rgba(245,200,66,.4);}
+.card.face-down{background:#1a2a6a;cursor:default;}
+.card.face-down:hover{transform:none;}
+.card-value{font-size:1.3rem;font-weight:900;line-height:1;}
+.card-suit{font-size:1.5rem;line-height:1;}
+.card.red .card-value,.card.red .card-suit{color:var(--red);}
+.card.black .card-value,.card.black .card-suit{color:#1a1a2a;}
+.card-back-design{width:54px;height:80px;background:repeating-linear-gradient(45deg,#1a3a9a,#1a3a9a 4px,#2a55c8 4px,#2a55c8 8px);border-radius:6px;border:2px solid #4a70e0;}
+.special-badge{position:absolute;top:3px;right:4px;font-size:.55rem;font-weight:900;background:var(--gold);color:#1a1000;border-radius:4px;padding:1px 3px;line-height:1.2;}
+
+/* TABLE */
+.table-wrap{width:100%;background:radial-gradient(ellipse at center,#1e5c3a 0%,var(--felt2) 100%);border:3px solid #2d7a50;border-radius:20px;padding:16px 20px;min-height:150px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:inset 0 3px 20px rgba(0,0,0,.5),0 4px 20px rgba(0,0,0,.4);position:relative;}
+.table-wrap::before{content:'';position:absolute;inset:6px;border:1px solid rgba(255,255,255,.06);border-radius:15px;pointer-events:none;}
+.table-label{font-size:.75rem;color:#4aaa70;font-weight:700;letter-spacing:3px;}
+.deck-info{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.2);border-radius:10px;padding:6px 14px;}
+.deck-count{color:var(--green);font-weight:700;font-size:.9rem;}
+
+/* THROW ZONE */
+.throw-zone{width:100%;min-height:52px;border:2px dashed rgba(245,200,66,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;transition:all .25s;cursor:default;}
+.throw-zone.ready{border-color:rgba(245,200,66,.6);background:rgba(245,200,66,.05);cursor:pointer;animation:glow 1.4s infinite;}
+.throw-zone.ready:hover{background:rgba(245,200,66,.1);}
+.throw-zone-text{color:rgba(245,200,66,.35);font-size:.85rem;text-align:center;}
+.throw-zone.ready .throw-zone-text{color:var(--gold);}
+
+/* STATUS */
+.status-bar{background:var(--panel);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;padding:10px 20px;text-align:center;font-size:.9rem;width:100%;transition:border-color .3s,color .3s;min-height:44px;}
+.status-bar.my-turn{border-color:var(--gold);color:var(--gold);}
+.status-bar.opp-turn{color:var(--dim);}
+
+/* OVERLAY */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;align-items:center;justify-content:center;}
+#overlay.show{display:flex;animation:fadeIn .3s ease;}
+.overlay-box{background:var(--panel2);border:2px solid var(--gold);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:90%;box-shadow:0 0 60px rgba(245,200,66,.2);}
+.overlay-box h2{font-size:2.2rem;color:var(--gold);margin-bottom:8px;}
+.overlay-box p{color:var(--dim);margin-bottom:28px;font-size:1rem;line-height:1.8;white-space:pre-line;}
+
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel2);border:1.5px solid var(--gold);border-radius:12px;padding:11px 22px;color:var(--gold);font-weight:700;z-index:200;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;font-size:.95rem;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.float-score{position:fixed;pointer-events:none;z-index:300;font-size:1.5rem;font-weight:900;color:var(--gold);text-shadow:0 2px 8px rgba(0,0,0,.5);animation:floatUp .9s ease forwards;}
+
+@media(max-width:480px){#lobby h1{font-size:2.4rem;}}
+
+/* BASRA badge */
+.basra-badge{position:absolute;top:3px;left:4px;font-size:.5rem;font-weight:900;background:#e03030;color:white;border-radius:4px;padding:1px 3px;line-height:1.2;}
+</style>
+</head>
+<body>
+
+<!-- LOBBY -->
+<div id="lobby">
+  <div class="cards-deco">🂡 🂱 🃁 🃑</div>
+  <h1>كوتشينة</h1>
+  <p class="subtitle">العب أونلاين مع صاحبك في الحتة 🔥</p>
+
+  <div class="glass-panel" id="lobby-main">
+    <div class="input-group" style="margin-bottom:16px">
+      <label>اسمك في اللعبة</label>
+      <input type="text" id="playerName" placeholder="اكتب اسمك هنا" maxlength="15"/>
+    </div>
+    <button class="btn btn-gold" onclick="createRoom()" style="margin-bottom:14px">🏠 أنشئ غرفة جديدة</button>
+    <div class="divider">أو انضم لغرفة موجودة</div>
+    <div class="input-group" style="margin-top:12px;margin-bottom:12px">
+      <label>كود الغرفة</label>
+      <input type="text" id="roomCodeInput" placeholder="A B C 1 2 3" maxlength="6"
+        style="text-align:center;letter-spacing:8px;font-weight:900;font-size:1.3rem"
+        oninput="this.value=this.value.toUpperCase()"/>
+    </div>
+    <button class="btn btn-outline" onclick="joinRoom()">🚪 انضم للغرفة</button>
+  </div>
+
+  <div class="glass-panel" id="lobby-waiting" style="display:none;text-align:center">
+    <p style="color:var(--dim);font-size:.85rem;margin-bottom:12px">شارك الكود ده مع صاحبك 👇</p>
+    <div class="room-code-display" style="margin-bottom:16px">
+      <div class="code" id="displayRoomCode">------</div>
+      <div class="hint">كود الغرفة</div>
+    </div>
+    <div class="waiting-indicator" style="margin-bottom:16px">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span>بنستنى صاحبك...</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-direction:column">
+      <button class="btn btn-gold" onclick="copyCode()">📋 نسخ الكود</button>
+      <button class="btn btn-outline" style="border-color:rgba(224,80,80,.4);color:#e05050" onclick="leaveRoom()">❌ إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div class="game-header">
+    <div class="game-title">🃏 كوتشينة</div>
+    <button class="btn btn-outline btn-sm" onclick="leaveGame()">خروج 🚪</button>
+  </div>
+
+  <!-- Main two-column layout -->
+  <div class="game-body">
+
+    <!-- LEFT: game area -->
+    <div class="game-main">
+
+      <div class="scores-row">
+        <div class="score-card" id="myScoreCard">
+          <div class="avatar" id="myAvatar">أ</div>
+          <div class="info">
+            <div class="sname" id="myNameDisp">أنا</div>
+            <div class="spts" id="myPtsDisp">0</div>
+            <div class="scap">أخدت: <span id="myCapDisp">0</span> ورقة</div>
+            <div class="scap" style="color:var(--gold)">🏆 كسب: <span id="myWinsDisp">0</span></div>
+          </div>
+        </div>
+        <div class="score-card" id="oppScoreCard">
+          <div class="avatar" id="oppAvatar" style="background:linear-gradient(135deg,#e05050,#901010)">خ</div>
+          <div class="info">
+            <div class="sname" id="oppNameDisp">الخصم</div>
+            <div class="spts" id="oppPtsDisp">0</div>
+            <div class="scap">أخد: <span id="oppCapDisp">0</span> ورقة</div>
+            <div class="scap" style="color:#e05050">🏆 كسب: <span id="oppWinsDisp">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opponent -->
+      <div class="player-area">
+        <div class="player-label" id="oppLabel">الخصم</div>
+        <div class="cards-row" id="oppCards"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-label">● الطاولة ●</div>
+        <div class="deck-info">
+          <div class="card face-down" style="width:40px;height:56px;border-radius:7px">
+            <div class="card-back-design" style="width:30px;height:42px"></div>
+          </div>
+          <div class="deck-count">🃏 باقي: <span id="deckCount">0</span></div>
+        </div>
+        <div class="cards-row" id="tableCards"></div>
+        <div class="throw-zone" id="throwZone" onclick="throwToTable()">
+          <span class="throw-zone-text">اختار ورقة من إيدك الأول</span>
+        </div>
+      </div>
+
+      <!-- My cards -->
+      <div class="player-area">
+        <div class="cards-row" id="myCards"></div>
+        <div class="player-label" id="myLabel">أنا</div>
+      </div>
+
+      <div class="status-bar" id="statusBar">جاري التحميل...</div>
+    </div>
+
+    <!-- RIGHT: chat -->
+    <div class="chat-sidebar">
+      <div class="chat-sidebar-title">💬 شات الغرفة</div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <!-- Quick emoji -->
+      <div class="chat-emojis">
+        <button onclick="quickEmoji('😂')">😂</button>
+        <button onclick="quickEmoji('🔥')">🔥</button>
+        <button onclick="quickEmoji('👏')">👏</button>
+        <button onclick="quickEmoji('😤')">😤</button>
+        <button onclick="quickEmoji('🤝')">🤝</button>
+        <button onclick="quickEmoji('💀')">💀</button>
+        <button onclick="quickEmoji('👑')">👑</button>
+        <button onclick="quickEmoji('😎')">😎</button>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="اكتب هنا..." maxlength="80" onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="chat-send-btn" onclick="sendChat()">⬆</button>
+      </div>
+    </div>
+
+  </div><!-- end game-body -->
+</div>
+
+<!-- Overlay -->
+<div id="overlay">
+  <div class="overlay-box">
+    <h2 id="overlayTitle">🎉</h2>
+    <p id="overlayMsg"></p>
+    <button class="btn btn-gold" style="margin-bottom:12px" onclick="playAgain()">🔄 لعبة جديدة</button>
+    <button class="btn btn-outline" onclick="leaveGame()">🚪 خروج</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase,ref,set,get,onValue,update,remove,off }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyAX2mstXIINSYV4vfwHiQ3bp4AQxJvd1FE",
+  authDomain:"online-game-bd6f5.firebaseapp.com",
+  databaseURL:"https://online-game-bd6f5-default-rtdb.firebaseio.com",
+  projectId:"online-game-bd6f5",
+  storageBucket:"online-game-bd6f5.firebasestorage.app",
+  messagingSenderId:"97074698652",
+  appId:"1:97074698652:web:b758ad1320b34dc5ef9059"
+});
+const db = getDatabase(app);
+
+let myId=null,roomCode=null,roomRef=null,gameListener=null;
+let selectedCard=null, lastData=null;
+
+// ── Deck ────────────────────────────────────────────
+const SUITS=['♠','♥','♦','♣'];
+const VALS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const buildDeck=()=>SUITS.flatMap(s=>VALS.map(v=>({suit:s,val:v})));
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+const isRed=c=>c.suit==='♥'||c.suit==='♦';
+const numVal=v=>v==='A'?1:v==='J'?11:v==='Q'?12:v==='K'?13:parseInt(v);
+const isJack=c=>c.val==='J';
+const is7D=c=>c.val==='7'&&c.suit==='♦';
+const isSuper=c=>isJack(c)||is7D(c);
+
+// ── Face Card SVGs ──────────────────────────────────
+function faceSVG(val,suit){
+  const red=suit==='♥'||suit==='♦';
+  const mc=red?'#b80018':'#1a1a2e', sc=red?'#8b0015':'#0d0d1a';
+  const gc='#d4a000', sk='#f5d5a0', hr=red?'#6b1800':'#1a0a00';
+  const cl=red?'#9b0014':'#1a1a5e', ac=red?'#e03030':'#3030c0';
+  const s=suit;
+
+  if(val==='J') return `<svg viewBox="0 0 70 98" xmlns="http://www.w3.org/2000/svg" width="70" height="98">
+  <defs>
+    <linearGradient id="bj${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fffef5"/><stop offset="100%" stop-color="#f5f0dc"/></linearGradient>
+    <linearGradient id="cj${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${cl}"/><stop offset="100%" stop-color="${sc}"/></linearGradient>
+  </defs>
+  <rect width="70" height="98" rx="9" fill="url(#bj${s})"/>
+  <rect x="2" y="2" width="66" height="94" rx="8" fill="none" stroke="${mc}" stroke-width=".6" opacity=".3"/>
+  <text x="5" y="14" font-size="11" font-weight="900" fill="${mc}" font-family="Georgia,serif">J</text>
+  <text x="5" y="25" font-size="12" fill="${mc}" font-family="serif">${s}</text>
+  <text x="65" y="87" font-size="11" font-weight="900" fill="${mc}" font-family="Georgia,serif" transform="rotate(180,65,87)">J</text>
+  <text x="65" y="98" font-size="12" fill="${mc}" font-family="serif" transform="rotate(180,65,98)">${s}</text>
+  <!-- Hat brim -->
+  <ellipse cx="35" cy="35" rx="17" ry="4" fill="${hr}"/>
+  <!-- Hat top -->
+  <rect x="20" y="19" width="30" height="17" rx="5" fill="${hr}"/>
+  <!-- Hat band gold -->
+  <rect x="20" y="29" width="30" height="5" fill="${gc}" opacity=".75"/>
+  <!-- Feather -->
+  <path d="M48 21 Q60 10 64 8 Q57 15 51 26" fill="${red?'#d04040':'#4040d0'}" opacity=".92"/>
+  <path d="M48 21 Q57 13 62 11 Q55 17 51 26" fill="${red?'#ff9090':'#9090ff'}" opacity=".45"/>
+  <!-- Ears -->
+  <ellipse cx="19" cy="47" rx="4" ry="5.5" fill="${sk}"/><ellipse cx="51" cy="47" rx="4" ry="5.5" fill="${sk}"/>
+  <ellipse cx="19" cy="47" rx="2.5" ry="3.5" fill="#e8c090"/><ellipse cx="51" cy="47" rx="2.5" ry="3.5" fill="#e8c090"/>
+  <!-- Face -->
+  <ellipse cx="35" cy="47" rx="13" ry="14" fill="${sk}"/>
+  <!-- Hair sides -->
+  <ellipse cx="22" cy="50" rx="4.5" ry="9" fill="${hr}"/><ellipse cx="48" cy="50" rx="4.5" ry="9" fill="${hr}"/>
+  <!-- Eyes -->
+  <ellipse cx="29" cy="44" rx="3.2" ry="3.4" fill="white"/><ellipse cx="41" cy="44" rx="3.2" ry="3.4" fill="white"/>
+  <circle cx="30" cy="45" r="2" fill="${mc}"/><circle cx="42" cy="45" r="2" fill="${mc}"/>
+  <circle cx="30.7" cy="44.3" r=".7" fill="white"/><circle cx="42.7" cy="44.3" r=".7" fill="white"/>
+  <!-- Eyebrows -->
+  <path d="M26 41 Q29 39 32 41" stroke="${hr}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M38 41 Q41 39 44 41" stroke="${hr}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <!-- Nose -->
+  <path d="M33 49 Q35 52.5 37 49" stroke="${mc}" stroke-width=".9" fill="none"/>
+  <!-- Smile -->
+  <path d="M30 54 Q35 58 40 54" stroke="${mc}" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+  <!-- Body jacket -->
+  <path d="M21 62 Q35 67 49 62 L53 92 Q35 96 17 92 Z" fill="url(#cj${s})"/>
+  <!-- Lapels -->
+  <path d="M35 62 L27 69 L35 92" fill="${mc}" opacity=".25"/><path d="M35 62 L43 69 L35 92" fill="${mc}" opacity=".18"/>
+  <!-- Gold buttons -->
+  <circle cx="35" cy="70" r="2.4" fill="${gc}"/><circle cx="35" cy="78" r="2.4" fill="${gc}"/><circle cx="35" cy="86" r="2.4" fill="${gc}"/>
+  <!-- Sleeves -->
+  <path d="M21 62 Q14 73 17 86" stroke="${cl}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+  <path d="M49 62 Q56 73 53 86" stroke="${cl}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+  <!-- Cuffs -->
+  <line x1="14" y1="84" x2="19" y2="88" stroke="${gc}" stroke-width="2.2"/>
+  <line x1="51" y1="84" x2="56" y2="88" stroke="${gc}" stroke-width="2.2"/>
+</svg>`;
+
+  if(val==='Q') return `<svg viewBox="0 0 70 98" xmlns="http://www.w3.org/2000/svg" width="70" height="98">
+  <defs>
+    <linearGradient id="bq${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fffef5"/><stop offset="100%" stop-color="#f5f0e8"/></linearGradient>
+    <linearGradient id="dq${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${cl}"/><stop offset="100%" stop-color="${sc}"/></linearGradient>
+  </defs>
+  <rect width="70" height="98" rx="9" fill="url(#bq${s})"/>
+  <rect x="2" y="2" width="66" height="94" rx="8" fill="none" stroke="${mc}" stroke-width=".6" opacity=".3"/>
+  <text x="5" y="14" font-size="11" font-weight="900" fill="${mc}" font-family="Georgia,serif">Q</text>
+  <text x="5" y="25" font-size="12" fill="${mc}" font-family="serif">${s}</text>
+  <text x="65" y="87" font-size="11" font-weight="900" fill="${mc}" font-family="Georgia,serif" transform="rotate(180,65,87)">Q</text>
+  <text x="65" y="98" font-size="12" fill="${mc}" font-family="serif" transform="rotate(180,65,98)">${s}</text>
+  <!-- Crown -->
+  <polygon points="16,34 22,20 35,28 48,20 54,34" fill="${gc}"/>
+  <polygon points="22,20 26,30 35,24 44,30 48,20 44,34 26,34" fill="${gc}" opacity=".55"/>
+  <rect x="14" y="33" width="42" height="5" rx="2.5" fill="${gc}"/>
+  <circle cx="22" cy="20" r="3.2" fill="${ac}"/><circle cx="35" cy="24" r="3.8" fill="${ac}"/><circle cx="48" cy="20" r="3.2" fill="${ac}"/>
+  <!-- Long hair -->
+  <path d="M23 42 Q15 60 17 80" stroke="${hr}" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+  <path d="M47 42 Q55 60 53 80" stroke="${hr}" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="35" cy="43" rx="16" ry="3.5" fill="${hr}"/>
+  <!-- Ears -->
+  <ellipse cx="19" cy="49" rx="3.5" ry="5" fill="${sk}"/><ellipse cx="51" cy="49" rx="3.5" ry="5" fill="${sk}"/>
+  <!-- Face -->
+  <ellipse cx="35" cy="49" rx="12" ry="13" fill="${sk}"/>
+  <!-- Eyes with lashes -->
+  <ellipse cx="29" cy="46" rx="2.8" ry="3.1" fill="white"/><ellipse cx="41" cy="46" rx="2.8" ry="3.1" fill="white"/>
+  <circle cx="30" cy="47" r="1.8" fill="${mc}"/><circle cx="42" cy="47" r="1.8" fill="${mc}"/>
+  <circle cx="30.6" cy="46.4" r=".6" fill="white"/><circle cx="42.6" cy="46.4" r=".6" fill="white"/>
+  <path d="M27 44 L25.5 42 M28.5 43.5 L27.5 41.5 M30 43.5 L30 41.5" stroke="${hr}" stroke-width=".9" fill="none"/>
+  <path d="M39 43.5 L39 41.5 M40.5 43.5 L41.5 41.5 M42 44 L43.5 42" stroke="${hr}" stroke-width=".9" fill="none"/>
+  <!-- Blush -->
+  <ellipse cx="24" cy="51" rx="4" ry="2.5" fill="#ff9090" opacity=".28"/><ellipse cx="46" cy="51" rx="4" ry="2.5" fill="#ff9090" opacity=".28"/>
+  <!-- Nose -->
+  <path d="M33 52 Q35 54.5 37 52" stroke="${mc}" stroke-width=".8" fill="none"/>
+  <!-- Lips -->
+  <path d="M29 56 Q35 60.5 41 56" stroke="${red?'#c00028':'#800018'}" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+  <path d="M29 56 Q35 58 41 56" stroke="${red?'#ff7090':'#c07090'}" stroke-width=".7" fill="none"/>
+  <!-- Dress -->
+  <path d="M22 63 Q35 68 48 63 L55 93 H15 Z" fill="url(#dq${s})"/>
+  <!-- Necklace -->
+  <path d="M25 63 Q35 69 45 63" stroke="${gc}" stroke-width="1.9" fill="none"/>
+  <circle cx="35" cy="68" r="3.2" fill="${gc}"/><circle cx="35" cy="68" r="2" fill="${ac}"/>
+  <!-- Dress lines -->
+  <path d="M23 75 Q35 79 47 75" stroke="${red?'#ff9090':'#9090ff'}" stroke-width="1" fill="none" opacity=".45"/>
+  <path d="M19 84 Q35 89 51 84" stroke="${red?'#ff9090':'#9090ff'}" stroke-width="1" fill="none" opacity=".45"/>
+  <!-- Sleeve puffs -->
+  <ellipse cx="17" cy="66" rx="5.5" ry="6.5" fill="${cl}" opacity=".9"/><ellipse cx="53" cy="66" rx="5.5" ry="6.5" fill="${cl}" opacity=".9"/>
+</svg>`;
+
+  if(val==='K') return `<svg viewBox="0 0 70 98" xmlns="http://www.w3.org/2000/svg" width="70" height="98">
+  <defs>
+    <linearGradient id="bk${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fffef5"/><stop offset="100%" stop-color="#f2edd8"/></linearGradient>
+    <linearGradient id="rk${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${cl}"/><stop offset="100%" stop-color="${sc}"/></linearGradient>
+  </defs>
+  <rect width="70" height="98" rx="9" fill="url(#bk${s})"/>
+  <rect x="2" y="2" width="66" height="94" rx="8" fill="none" stroke="${mc}" stroke-width=".6" opacity=".3"/>
+  <text x="5" y="14" font-size="11" font-weight="900" fill="${mc}" font-family="Georgia,serif">K</text>
+  <text x="5" y="25" font-size="12" fill="${mc}" font-family="serif">${s}</text>
+  <text x="65" y="87" font-size="11" font-weight="900" fill="${mc}" font-family="Georgia,serif" transform="rotate(180,65,87)">K</text>
+  <text x="65" y="98" font-size="12" fill="${mc}" font-family="serif" transform="rotate(180,65,98)">${s}</text>
+  <!-- Big Crown -->
+  <polygon points="12,34 20,16 35,26 50,16 58,34" fill="${gc}"/>
+  <polygon points="20,16 24,28 35,20 46,28 50,16 46,34 24,34" fill="${gc}" opacity=".52"/>
+  <rect x="10" y="33" width="50" height="6" rx="3" fill="${gc}"/>
+  <circle cx="20" cy="16" r="3.8" fill="${ac}"/><circle cx="35" cy="20" r="4.3" fill="${ac}"/><circle cx="50" cy="16" r="3.8" fill="${ac}"/>
+  <circle cx="25" cy="36" r="2.2" fill="${red?'#40c040':'#c04040'}"/>
+  <circle cx="35" cy="36" r="2.7" fill="${gc}"/><circle cx="45" cy="36" r="2.2" fill="${red?'#40c040':'#c04040'}"/>
+  <!-- Beard sides -->
+  <path d="M22 50 Q13 63 15 80" stroke="${hr}" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M48 50 Q57 63 55 80" stroke="${hr}" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <!-- Beard bottom -->
+  <ellipse cx="35" cy="76" rx="15" ry="9" fill="${hr}"/>
+  <!-- Face -->
+  <ellipse cx="35" cy="50" rx="13.5" ry="14" fill="${sk}"/>
+  <!-- Eyes stern -->
+  <ellipse cx="28" cy="47" rx="3" ry="2.7" fill="white"/><ellipse cx="42" cy="47" rx="3" ry="2.7" fill="white"/>
+  <circle cx="29" cy="47.5" r="1.8" fill="${mc}"/><circle cx="43" cy="47.5" r="1.8" fill="${mc}"/>
+  <circle cx="29.6" cy="47" r=".6" fill="white"/><circle cx="43.6" cy="47" r=".6" fill="white"/>
+  <!-- Heavy brows -->
+  <path d="M24 44 Q28 41.5 32 44" stroke="${hr}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M38 44 Q42 41.5 46 44" stroke="${hr}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <!-- Nose strong -->
+  <ellipse cx="35" cy="53" rx="3.2" ry="2.2" fill="${sk}" stroke="${mc}" stroke-width=".6"/>
+  <path d="M32 52 Q35 56 38 52" stroke="${mc}" stroke-width="1" fill="none"/>
+  <!-- Mustache thick -->
+  <path d="M25 57 Q30 62 35 59 Q40 62 45 57" stroke="${hr}" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <!-- Robe -->
+  <path d="M20 66 Q35 71 50 66 L59 93 H11 Z" fill="url(#rk${s})"/>
+  <!-- Fur trim -->
+  <path d="M20 66 Q35 71 50 66" stroke="white" stroke-width="4.5" fill="none" opacity=".5"/>
+  <path d="M11 93 Q35 89 59 93" stroke="white" stroke-width="4.5" fill="none" opacity=".5"/>
+  <!-- Robe pattern -->
+  <path d="M24 77 Q35 81 46 77 M21 86 Q35 91 49 86" stroke="${red?'#ff9090':'#9090ff'}" stroke-width=".9" fill="none" opacity=".45"/>
+  <!-- Scepter -->
+  <line x1="53" y1="66" x2="62" y2="88" stroke="${gc}" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="62" cy="86" r="5" fill="${gc}"/><circle cx="62" cy="86" r="3.2" fill="${ac}"/>
+  <!-- Medal -->
+  <circle cx="35" cy="79" r="5.5" fill="${gc}"/><circle cx="35" cy="79" r="3.8" fill="${ac}"/>
+  <text x="35" y="81.5" font-size="5" text-anchor="middle" fill="white" font-weight="900">${s}</text>
+</svg>`;
+  return null;
+}
+
+// ── Lobby ───────────────────────────────────────────
+window.createRoom = async function(){
+  const name=document.getElementById('playerName').value.trim();
+  if(!name){showToast('✋ اكتب اسمك!');return;}
+  const code=Math.random().toString(36).substring(2,8).toUpperCase();
+  roomCode=code; myId='player1';
+  const deck=shuffle(buildDeck());
+  const table=deck.splice(0,4), p1=deck.splice(0,4), p2=deck.splice(0,4);
+  roomRef=ref(db,'rooms/'+code);
+  await set(roomRef,{status:'waiting',player1:{name,hand:p1,captured:[],score:0,wins:0},player2:{name:'',hand:p2,captured:[],score:0,wins:0},table,deck,turn:'player1',round:1,lastCapture:null,chat:[]});
+  document.getElementById('lobby-main').style.display='none';
+  document.getElementById('lobby-waiting').style.display='block';
+  document.getElementById('displayRoomCode').textContent=code;
+  onValue(roomRef,snap=>{const d=snap.val();if(d&&d.status==='playing')startGame(d);});
+};
+
+window.joinRoom = async function(){
+  const name=document.getElementById('playerName').value.trim();
+  const code=document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  if(!name){showToast('✋ اكتب اسمك!');return;}
+  if(code.length<4){showToast('✋ أدخل الكود!');return;}
+  roomCode=code; myId='player2';
+  const snap=await get(ref(db,'rooms/'+code));
+  if(!snap.exists()){showToast('❌ الغرفة مش موجودة!');return;}
+  const d=snap.val();
+  if(d.status!=='waiting'){showToast('❌ الغرفة مشغولة!');return;}
+  roomRef=ref(db,'rooms/'+code);
+  await update(roomRef,{'player2/name':name,status:'playing'});
+  startGame(d);
+};
+
+window.leaveRoom=async function(){if(roomRef)await remove(roomRef);location.reload();};
+window.copyCode=function(){navigator.clipboard.writeText(roomCode).then(()=>showToast('📋 تم نسخ الكود!'));};
+
+// ── Game ────────────────────────────────────────────
+function startGame(){
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('game').style.display='flex';
+  if(gameListener)off(roomRef);
+  gameListener=onValue(roomRef,snap=>{
+    const d=snap.val();
+    if(!d){showToast('انتهت الغرفة');setTimeout(()=>location.reload(),2000);return;}
+    lastData=d; renderGame(d);
+  });
+}
+
+function renderGame(data){
+  const me=data[myId], oppId=myId==='player1'?'player2':'player1', opp=data[oppId];
+  const myTurn=data.turn===myId;
+  document.getElementById('myNameDisp').textContent=me.name||'أنا';
+  document.getElementById('oppNameDisp').textContent=opp.name||'الخصم';
+  document.getElementById('myPtsDisp').textContent=me.score||0;
+  document.getElementById('oppPtsDisp').textContent=opp.score||0;
+  document.getElementById('myCapDisp').textContent=(me.captured||[]).length;
+  document.getElementById('oppCapDisp').textContent=(opp.captured||[]).length;
+  document.getElementById('myWinsDisp').textContent=me.wins||0;
+  document.getElementById('oppWinsDisp').textContent=opp.wins||0;
+  document.getElementById('myAvatar').textContent=(me.name||'أ')[0];
+  document.getElementById('oppAvatar').textContent=(opp.name||'خ')[0];
+  document.getElementById('myScoreCard').classList.toggle('is-turn',myTurn);
+  document.getElementById('oppScoreCard').classList.toggle('is-turn',!myTurn);
+  document.getElementById('myLabel').textContent=(me.name||'أنا')+(myTurn?' 🟡 دورك':'');
+  document.getElementById('myLabel').className='player-label'+(myTurn?' active':'');
+  document.getElementById('oppLabel').textContent=(opp.name||'الخصم')+(!myTurn?' 🟡 دوره':'');
+  document.getElementById('deckCount').textContent=(data.deck||[]).length;
+
+  renderTableCards(data.table||[], myTurn);
+  renderMyCards(me.hand||[], myTurn);
+  renderFaceDown('oppCards',(opp.hand||[]).length);
+  updateThrowZone(myTurn);
+
+  const sb=document.getElementById('statusBar');
+  if(myTurn){
+    sb.textContent=selectedCard!==null?'👆 اضغط على ورقة في الطاولة أو اضغط السهم الأخضر لترميها':'🟡 دورك! اختار ورقة من إيدك';
+    sb.className='status-bar my-turn';
+  }else{
+    sb.textContent=`⏳ مستنى ${opp.name||'الخصم'} يلعب...`;
+    sb.className='status-bar opp-turn';
+  }
+
+  if(data.status==='gameover')showGameOver(data);
+  if(data.status==='dealing'&&myId==='player1')dealNewRound(data);
+  renderChat(data.chat||[]);
+}
+
+function updateThrowZone(myTurn){
+  const z=document.getElementById('throwZone');
+  const active=myTurn&&selectedCard!==null;
+  z.classList.toggle('ready',active);
+  z.querySelector('.throw-zone-text').textContent=active
+    ?'🟢 اضغط هنا لترمي الورقة على الطاولة (لو مش عندك مطابق)'
+    :'اختار ورقة من إيدك الأول';
+}
+
+function renderTableCards(cards,myTurn){
+  const c=document.getElementById('tableCards'); c.innerHTML='';
+  const isBasraPossible=cards.length===1;
+  cards.forEach((card,idx)=>{
+    const el=makeCard(card);
+    if(isBasraPossible&&myTurn&&selectedCard!==null){
+      const b=document.createElement('div');b.className='basra-badge';b.textContent='بصرة!';el.appendChild(b);
+    }
+    if(myTurn&&selectedCard!==null){
+      el.classList.add('capturable');
+      el.onclick=()=>tryCapture(idx);
+    }
+    c.appendChild(el);
+  });
+}
+
+function renderMyCards(cards,myTurn){
+  const c=document.getElementById('myCards'); c.innerHTML='';
+  cards.forEach((card,idx)=>{
+    const el=makeCard(card);
+    if(myTurn) el.onclick=()=>selectCard(idx);
+    if(selectedCard===idx) el.classList.add('selected');
+    if(isJack(card)){const b=document.createElement('div');b.className='special-badge';b.textContent='ولد';el.appendChild(b);}
+    if(is7D(card)){const b=document.createElement('div');b.className='special-badge';b.style.background='#e03030';b.style.color='white';b.textContent='7♦';el.appendChild(b);}
+    c.appendChild(el);
+  });
+}
+
+function renderFaceDown(id,count){
+  const c=document.getElementById(id);c.innerHTML='';
+  for(let i=0;i<count;i++){const el=document.createElement('div');el.className='card face-down';el.innerHTML='<div class="card-back-design"></div>';c.appendChild(el);}
+}
+
+function makeCard(card){
+  const el=document.createElement('div');
+  const isFace=['J','Q','K'].includes(card.val);
+  el.className=`card ${isRed(card)?'red':'black'}`;
+  if(isFace){el.innerHTML=faceSVG(card.val,card.suit);el.style.padding='0';el.style.overflow='hidden';}
+  else el.innerHTML=`<div class="card-value">${card.val}</div><div class="card-suit">${card.suit}</div>`;
+  return el;
+}
+
+// ── Game Logic ──────────────────────────────────────
+function selectCard(idx){
+  selectedCard=selectedCard===idx?null:idx;
+  if(!lastData)return;
+  const mt=lastData.turn===myId;
+  renderMyCards(lastData[myId].hand||[],mt);
+  renderTableCards(lastData.table||[],mt);
+  updateThrowZone(mt);
+  const sb=document.getElementById('statusBar');
+  if(mt) sb.textContent=selectedCard!==null?'👆 اضغط على ورقة في الطاولة أو اضغط السهم الأخضر لترميها':'🟡 دورك! اختار ورقة من إيدك';
+}
+
+// Throw card to table (when no match OR table is empty)
+window.throwToTable=async function(){
+  if(selectedCard===null){showToast('✋ اختار ورقة الأول!');return;}
+  if(!lastData||lastData.turn!==myId)return;
+  const tableCards=[...(lastData.table||[])];
+  const myCard=lastData[myId].hand[selectedCard];
+  // If there's a match on table, can't throw
+  const hasMatch=tableCards.some(tc=>tc.val===myCard.val)||isSuper(myCard);
+  if(hasMatch&&tableCards.length>0){showToast('⚠️ عندك مطابق! لازم تاخده');return;}
+  await commitThrow();
+};
+
+async function tryCapture(tableIdx){
+  if(selectedCard===null)return;
+  if(!lastData||lastData.turn!==myId)return;
+  const data=lastData;
+  const me=data[myId];
+  const myCard=me.hand[selectedCard];
+  const tableCards=[...(data.table||[])];
+
+  // Super cards (J or 7♦) take ALL table cards
+  if(isSuper(myCard)){
+    await commitSuperCapture(myCard,tableCards);
+    return;
+  }
+
+  const myNum=numVal(myCard.val);
+  const clickedVal=numVal(tableCards[tableIdx].val);
+
+  // Direct match: take ALL cards with same value on table
+  if(myCard.val===tableCards[tableIdx].val){
+    // Collect all indices with same value
+    const matchIndices=tableCards.map((_,i)=>i).filter(i=>tableCards[i].val===myCard.val);
+    await commitCapture(myCard,matchIndices,tableCards);
+    return;
+  }
+
+  // Sum match: clicked card + any combination that sums to myNum
+  // Find best set of cards that sum to myNum (including tableIdx)
+  if(clickedVal<myNum){
+    const remaining=tableCards.map((_,i)=>i).filter(i=>i!==tableIdx);
+    const need=myNum-clickedVal;
+    // Try to find a subset of remaining cards that sums to 'need'
+    const found=findSubsetSum(remaining,tableCards,need);
+    if(found!==null){
+      await commitCapture(myCard,[tableIdx,...found],tableCards);
+      return;
+    }
+  }
+
+  // Check if any valid move exists
+  const hasDirectMatch=tableCards.some(tc=>tc.val===myCard.val);
+  let hasSumMatch=false;
+  const allIdx=tableCards.map((_,i)=>i);
+  if(!hasDirectMatch) hasSumMatch=findSubsetSum(allIdx,tableCards,myNum)!==null;
+
+  if(hasDirectMatch||hasSumMatch){showToast('⚠️ لازم تاخد المطابق أو المجموع!');return;}
+
+  // No valid move — throw card
+  await commitThrow();
+}
+
+function findSubsetSum(indices,cards,target){
+  // BFS/backtracking to find subset of indices whose values sum to target
+  const n=indices.length;
+  for(let mask=1;mask<(1<<n);mask++){
+    let s=0;const sel=[];
+    for(let b=0;b<n;b++){if(mask>>b&1){s+=numVal(cards[indices[b]].val);sel.push(indices[b]);}}
+    if(s===target)return sel;
+  }
+  return null;
+}
+
+async function commitCapture(myCard,indices,tableCards){
+  const snap=await get(ref(db,'rooms/'+roomCode));
+  const data=snap.val(); if(!data||data.turn!==myId)return;
+  const me={...data[myId]};
+  const oppId=myId==='player1'?'player2':'player1';
+  const taken=indices.map(i=>tableCards[i]);
+  const newTable=tableCards.filter((_,i)=>!indices.includes(i));
+  const newCap=[...(me.captured||[]),myCard,...taken];
+  me.hand=me.hand.filter((_,i)=>i!==selectedCard);
+  selectedCard=null;
+
+  // Basra check: took ALL table cards (table becomes empty)
+  const isBasra=newTable.length===0;
+  let scoreBonus=0;
+  if(isBasra){
+    scoreBonus=10;
+    showToast(`✨ بَصرة! +10 نقطة!`);
+    floatScore('+10 بصرة!');
+  } else {
+    floatScore(`+${1+taken.length}`);
+    showToast(`🎉 أخدت ${1+taken.length} ورقة!`);
+  }
+
+  const updates=buildUpdates(data,me,newTable,newCap,myId,oppId,true);
+  if(scoreBonus>0) updates[`rooms/${roomCode}/${myId}/score`]=(me.score||0)+scoreBonus;
+  await update(ref(db),updates);
+}
+
+async function commitSuperCapture(myCard,tableCards){
+  const snap=await get(ref(db,'rooms/'+roomCode));
+  const data=snap.val(); if(!data||data.turn!==myId)return;
+  const me={...data[myId]};
+  const oppId=myId==='player1'?'player2':'player1';
+  const newCap=[...(me.captured||[]),myCard,...tableCards];
+  me.hand=me.hand.filter((_,i)=>i!==selectedCard);
+  selectedCard=null;
+  // Basra: took all table (always true for super)
+  // Only counts as basra if tableCards had cards
+  const isBasra=tableCards.length>0;
+  let scoreBonus=isBasra?10:0;
+  if(isBasra){
+    showToast(`✨ بَصرة! ${isJack(myCard)?'الولد':'7 ديناري'} أخد كل الطاولة! (${tableCards.length}) +10`);
+    floatScore('+10 بصرة!');
+  } else {
+    showToast(`🔥 ${isJack(myCard)?'الولد':'7 ديناري'} — الطاولة فاضية`);
+  }
+  const updates=buildUpdates(data,me,[],newCap,myId,oppId,true);
+  if(scoreBonus>0) updates[`rooms/${roomCode}/${myId}/score`]=(me.score||0)+scoreBonus;
+  await update(ref(db),updates);
+}
+
+async function commitThrow(){
+  const snap=await get(ref(db,'rooms/'+roomCode));
+  const data=snap.val(); if(!data||data.turn!==myId)return;
+  const me={...data[myId]};
+  const oppId=myId==='player1'?'player2':'player1';
+  const thrownCard=me.hand[selectedCard];
+  me.hand=me.hand.filter((_,i)=>i!==selectedCard);
+  const newTable=[...(data.table||[]),thrownCard];
+  selectedCard=null;
+  showToast('↩️ رميت الورقة على الطاولة');
+  await update(ref(db),buildUpdates(data,me,newTable,me.captured||[],myId,oppId,false));
+}
+
+function buildUpdates(data,me,newTable,myCap,myId,oppId,captured){
+  const u={};
+  u[`rooms/${roomCode}/${myId}/hand`]=me.hand;
+  u[`rooms/${roomCode}/${myId}/captured`]=myCap;
+  u[`rooms/${roomCode}/table`]=newTable;
+  if(captured) u[`rooms/${roomCode}/lastCapture`]=myId;
+  const oppHand=data[oppId].hand||[];
+  if(me.hand.length===0&&oppHand.length===0){
+    const deck=data.deck||[];
+    if(deck.length===0){
+      const lc=captured?myId:(data.lastCapture||oppId);
+      const lcCap=lc===myId?myCap:(data[lc].captured||[]);
+      u[`rooms/${roomCode}/${lc}/captured`]=[...lcCap,...newTable];
+      u[`rooms/${roomCode}/table`]=[];
+      const p1Cap=myId==='player1'?myCap:(data.player1.captured||[]);
+      const p2Cap=myId==='player2'?myCap:(data.player2.captured||[]);
+      const p1Sum=p1Cap.reduce((s,c)=>s+numVal(c.val),0);
+      const p2Sum=p2Cap.reduce((s,c)=>s+numVal(c.val),0);
+      const p1Prev=data.player1.score||0, p2Prev=data.player2.score||0;
+      u[`rooms/${roomCode}/player1/score`]=p1Prev+p1Sum;
+      u[`rooms/${roomCode}/player2/score`]=p2Prev+p2Sum;
+      // Track winner for wins counter
+      const p1Total=p1Prev+p1Sum, p2Total=p2Prev+p2Sum;
+      if(p1Total>p2Total){u[`rooms/${roomCode}/player1/wins`]=(data.player1.wins||0)+1;}
+      else if(p2Total>p1Total){u[`rooms/${roomCode}/player2/wins`]=(data.player2.wins||0)+1;}
+      u[`rooms/${roomCode}/status`]='gameover';
+    } else {
+      u[`rooms/${roomCode}/status`]='dealing';
+    }
+  } else {
+    u[`rooms/${roomCode}/turn`]=oppId;
+    u[`rooms/${roomCode}/status`]='playing';
+  }
+  return u;
+}
+
+async function dealNewRound(data){
+  if(myId!=='player1')return;
+  const deck=[...(data.deck||[])];
+  if(deck.length<8){await update(ref(db,'rooms/'+roomCode),{status:'gameover'});return;}
+  const p1=deck.splice(0,4),p2=deck.splice(0,4);
+  await update(ref(db,'rooms/'+roomCode),{'player1/hand':p1,'player2/hand':p2,deck,status:'playing',round:(data.round||1)+1,lastCapture:null});
+}
+
+function showGameOver(data){
+  const me=data[myId],opp=data[myId==='player1'?'player2':'player1'];
+  const mp=me.score||0,op=opp.score||0;
+  const mw=me.wins||0,ow=opp.wins||0;
+  document.getElementById('overlayTitle').textContent=mp>op?'🎉 كسبت يسطا!':op>mp?'😞 خسرت!':'🤝 تعادل!';
+  document.getElementById('overlayMsg').textContent=`نقاطك: ${mp}\nنقاط ${opp.name||'الخصم'}: ${op}\n\nورق أخدته: ${(me.captured||[]).length}\nورق أخده: ${(opp.captured||[]).length}\n\n🏆 عدد الجيمات:\nأنت: ${mw}  |  ${opp.name||'الخصم'}: ${ow}`;
+  document.getElementById('overlay').classList.add('show');
+}
+
+window.playAgain=async function(){
+  document.getElementById('overlay').classList.remove('show');
+  if(myId!=='player1')return;
+  const snap=await get(ref(db,'rooms/'+roomCode));
+  const old=snap.val()||{};
+  const deck=shuffle(buildDeck());
+  await update(ref(db,'rooms/'+roomCode),{
+    'player1/hand':deck.splice(0,4),'player1/captured':[],'player1/score':0,'player1/wins':old.player1?.wins||0,
+    'player2/hand':deck.splice(0,4),'player2/captured':[],'player2/score':0,'player2/wins':old.player2?.wins||0,
+    table:deck.splice(0,4),deck,turn:'player1',status:'playing',round:1,lastCapture:null
+  });
+};
+
+window.leaveGame=async function(){
+  if(gameListener&&roomRef)off(roomRef);
+  if(roomRef)await remove(roomRef);
+  location.reload();
+};
+
+// ── Chat ─────────────────────────────────────────────
+async function pushChatMsg(msg){
+  if(!roomCode)return;
+  const me=lastData?lastData[myId]:null;
+  const name=me?.name||'لاعب';
+  const entry={name,id:myId,msg,ts:Date.now()};
+  const snap=await get(ref(db,'rooms/'+roomCode+'/chat'));
+  const current=snap.val()||[];
+  const updated=[...current,entry].slice(-40);
+  await update(ref(db,'rooms/'+roomCode),{chat:updated});
+}
+
+window.sendChat=async function(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  await pushChatMsg(msg);
+};
+
+window.quickEmoji=async function(emoji){
+  await pushChatMsg(emoji);
+};
+
+let lastChatLen=0;
+function renderChat(msgs){
+  if(msgs.length===lastChatLen)return;
+  lastChatLen=msgs.length;
+  const box=document.getElementById('chatMessages');
+  box.innerHTML='';
+  msgs.forEach(m=>{
+    const div=document.createElement('div');
+    const isMe=m.id===myId;
+    div.className='chat-msg '+(isMe?'mine':'opp');
+    div.innerHTML=`<span class="chat-author">${m.name}:</span>${m.msg}`;
+    box.appendChild(div);
+  });
+  box.scrollTop=box.scrollHeight;
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function floatScore(txt){
+  const el=document.createElement('div');
+  el.className='float-score';el.textContent=txt;
+  el.style.cssText='left:50%;bottom:180px;transform:translateX(-50%)';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),950);
+}
+</script>
+</body>
+</html>
